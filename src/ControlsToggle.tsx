@@ -18,6 +18,7 @@ export default function ControlsToggle() {
 
   React.useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      console.log("e.key.toLowerCase(): ", e.key.toLowerCase());
       switch (e.key.toLowerCase()) {
         case "o":
           dispatch(setEnabled(!enabled));
@@ -46,5 +47,5 @@ export default function ControlsToggle() {
     ctrl.enablePan = panEnabled;
   }, [enabled, zoomEnabled, rotateEnabled, panEnabled]);
 
-  return <DreiOrbitControls ref={controlsRef} />;
+  return <DreiOrbitControls ref={controlsRef} enabled={enabled} />;
 }

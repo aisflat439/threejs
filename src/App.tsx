@@ -1,46 +1,26 @@
 import React from "react";
 import { Canvas } from "@react-three/fiber";
-import { OrbitControls, PerspectiveCamera } from "@react-three/drei";
+import { DragControls, PerspectiveCamera, Text } from "@react-three/drei";
 import {
   addCube,
-  selectCube,
+  focusCube,
   selectCubes,
-  selectHasSelectedCube,
+  selectSelectedCube,
+  updateCubePosition,
 } from "./store/slices/cubes";
 import { useDispatch, useSelector } from "./store/hooks";
 import { Lighting } from "./Lighting";
+import ControlsToggle from "./ControlsToggle";
+import { setEnabled } from "./store/slices/controls";
+import { selectIsEditing } from "./store/slices/editor";
+import { Matrix4, Vector3 } from "three";
 
 function App() {
   const dispatch = useDispatch();
   const cubes = useSelector(selectCubes);
-  const isSelecting = useSelector(selectHasSelectedCube);
+  const editing = useSelector(selectIsEditing);
+  const selectedCubeId = useSelector(selectSelectedCube);
   const [zoom, setZoom] = React.useState(1);
-  const [enabled, setEnabled] = React.useState(false);
-  const handleKeyDown = (event: KeyboardEvent) => {
-    if (event.key === "Shift") {
-      setEnabled(true);
-    }
-  };
-
-  const handleKeyUp = (event: KeyboardEvent) => {
-    if (event.key === "Shift") {
-      setEnabled(false);
-    }
-  };
-
-  React.useEffect(() => {
-    window.addEventListener("keydown", handleKeyDown);
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-    };
-  }, []);
-
-  React.useEffect(() => {
-    window.addEventListener("keyup", handleKeyUp);
-    return () => {
-      window.removeEventListener("keyup", handleKeyUp);
-    };
-  }, []);
 
   return (
     <>
@@ -63,29 +43,69 @@ function App() {
           </button>
           <button onClick={() => setZoom(zoom + 0.1)}>zoom in</button>
           <button onClick={() => setZoom(zoom - 0.1)}>zoom out</button>
+          <button onClick={() => setZoom(1)}>reset zoom</button>
+        </div>
+        <div className="sub-editor-controls">
+          <p>Sub Editor Controls</p>
+          <button disabled={!editing}>drag cube</button>
         </div>
         <div className="editor">
           <Canvas>
+            {/* show world axes (red=x, green=y, blue=z) */}
+            <axesHelper args={[5]} />
+            {/* show a ground grid (size=10, divisions=10) */}
+            <gridHelper args={[10, 10]} />
+            {/* Axes labels */}
+            <Text position={[5.5, 0, 0]} color="red" fontSize={0.5}>
+              X
+            </Text>
+            <Text position={[0, 5.5, 0]} color="green" fontSize={0.5}>
+              Y
+            </Text>
+            <Text position={[0, 0, 5.5]} color="blue" fontSize={0.5}>
+              Z
+            </Text>
             <PerspectiveCamera makeDefault fov={60} position={[10, 5, 10]} />
-            <OrbitControls
-              enabled={!isSelecting}
-              // enabled={enabled} enableRotate={enabled}
-              // enableRotate={enabled}
-            />
+            <ControlsToggle />
             <Lighting />
 
             {cubes.map(({ id, position, selected }) => (
-              <mesh
+              <DragControls
                 key={id}
-                position={position}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  dispatch(selectCube(id));
+                onDragStart={() => {
+                  dispatch(setEnabled(false));
+                }}
+                onDrag={(
+                  localMatrix: Matrix4,
+                  deltaLocalMatrix: Matrix4,
+                  worldMatrix: Matrix4,
+                  deltaWorldMatrix: Matrix4
+                ) => {
+                  const position = new Vector3().setFromMatrixPosition(
+                    worldMatrix
+                  );
+                  console.log("position: ", position);
+
+                  // const id = selectedCubeId;
+                  // dispatch(updateCubePosition({ id, position }));
+                }}
+                onDragEnd={() => {
+                  dispatch(setEnabled(true));
                 }}
               >
-                <boxGeometry args={[1, 1, 1]} />
-                <meshStandardMaterial color={selected ? "green" : "blue"} />
-              </mesh>
+                <mesh
+                  key={id}
+                  position={position}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    dispatch(focusCube(id));
+                    dispatch(setEnabled(true));
+                  }}
+                >
+                  <boxGeometry args={[1, 1, 1]} />
+                  <meshStandardMaterial color={selected ? "green" : "blue"} />
+                </mesh>
+              </DragControls>
             ))}
           </Canvas>
         </div>
