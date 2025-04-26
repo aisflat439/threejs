@@ -43,14 +43,19 @@ const cubesSlice = createSlice({
         return { ...cube, selected: false };
       });
     },
-    updateCubePosition: (
+    updateCube: (
       state,
-      action: PayloadAction<{ id: string; position: [number, number, number] }>
+      action: PayloadAction<{
+        id: string;
+        position: [number, number, number];
+        scale: [number, number, number];
+      }>
     ) => {
-      const { id, position } = action.payload;
+      const { id, position, scale } = action.payload;
       const cube = state.cubes.find((c) => c.id === id);
       if (cube) {
         cube.position = position;
+        cube.scale = scale;
       }
     },
   },
@@ -75,5 +80,5 @@ export const focusCube =
   };
 
 const { focusCube: focusCubeWithoutEffects } = cubesSlice.actions;
-export const { addCube, deleteCube, updateCubePosition } = cubesSlice.actions;
+export const { addCube, deleteCube, updateCube } = cubesSlice.actions;
 export default cubesSlice.reducer;

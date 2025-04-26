@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Canvas } from "@react-three/fiber";
 import { PerspectiveCamera, TransformControls } from "@react-three/drei";
 import {
@@ -6,7 +6,7 @@ import {
   focusCube,
   selectCubes,
   selectSelectedCube,
-  updateCubePosition,
+  updateCube,
 } from "./store/slices/cubes";
 import { useDispatch, useSelector } from "./store/hooks";
 import { Lighting } from "./Lighting";
@@ -18,6 +18,7 @@ import { PhysicsWorld } from "./PhysicsWorld";
 import { Mesh } from "three";
 
 function App() {
+  const [isEditorVisible, setIsEditorVisible] = useState(false);
   const dispatch = useDispatch();
   const cubes = useSelector(selectCubes);
   const editing = useSelector(selectIsEditing);
@@ -37,6 +38,11 @@ function App() {
   return (
     <>
       <div className="app-container">
+        <div className="debug-controls">
+          <button onClick={() => setIsEditorVisible((current) => !current)}>
+            {isEditorVisible ? "hide editor" : "show editor"}
+          </button>
+        </div>
         <div className="editor-controls">
           editor controls
           <button
@@ -64,52 +70,60 @@ function App() {
           <button disabled={!editing}>drag cube</button>
         </div>
         <div className="editor">
-          <Canvas>
-            <PhysicsWorld>
-              <DebugHelpers />
-              <PerspectiveCamera makeDefault fov={60} position={[10, 5, 10]} />
-              <ControlsToggle />
-              <Lighting />
-              <TransformControls
-                object={meshesRef.current[selectedCubeId!] || undefined}
-                mode={mode}
-                onMouseUp={() => {
-                  const currentMesh = meshesRef.current[selectedCubeId!];
-                  if (currentMesh) {
-                    const { position, scale } = currentMesh;
-                    dispatch(
-                      updateCubePosition({
-                        id: selectedCubeId!,
-                        position: [position.x, position.y, position.z],
-                      })
-                    );
-                  }
-                }}
-              />
+          {isEditorVisible && (
+            <Canvas>
+              <PhysicsWorld>
+                <DebugHelpers />
+                <PerspectiveCamera
+                  makeDefault
+                  fov={60}
+                  position={[10, 5, 10]}
+                />
+                <ControlsToggle />
+                <Lighting />
+                <TransformControls
+                  object={meshesRef.current[selectedCubeId!] || undefined}
+                  mode={mode}
+                  onMouseUp={() => {
+                    const currentMesh = meshesRef.current[selectedCubeId!];
 
-              {cubes.map(({ id, position, selected, scale }) => (
-                <mesh
-                  key={id}
-                  ref={(mesh) => {
-                    if (mesh) {
-                      meshesRef.current[id] = mesh;
-                    } else {
-                      delete meshesRef.current[id];
+                    if (currentMesh) {
+                      const { position, scale } = currentMesh;
+                      dispatch(
+                        updateCube({
+                          id: selectedCubeId!,
+                          position: [position.x, position.y, position.z],
+                          scale: [scale.x, scale.y, scale.z],
+                        })
+                      );
                     }
                   }}
-                  position={position}
-                  scale={scale}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    dispatch(focusCube(id));
-                  }}
-                >
-                  <boxGeometry args={[1, 1, 1]} />
-                  <meshStandardMaterial color={selected ? "green" : "blue"} />
-                </mesh>
-              ))}
-            </PhysicsWorld>
-          </Canvas>
+                />
+
+                {cubes.map(({ id, position, selected, scale }) => (
+                  <mesh
+                    key={id}
+                    ref={(mesh) => {
+                      if (mesh) {
+                        meshesRef.current[id] = mesh;
+                      } else {
+                        delete meshesRef.current[id];
+                      }
+                    }}
+                    position={position}
+                    scale={scale}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      dispatch(focusCube(id));
+                    }}
+                  >
+                    <boxGeometry args={[1, 1, 1]} />
+                    <meshStandardMaterial color={selected ? "green" : "blue"} />
+                  </mesh>
+                ))}
+              </PhysicsWorld>
+            </Canvas>
+          )}
         </div>
       </div>
     </>
