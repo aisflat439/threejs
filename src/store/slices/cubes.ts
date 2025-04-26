@@ -7,6 +7,7 @@ interface Cube {
   name: string;
   color: string;
   position: [x: number, y: number, z: number];
+  scale?: [x: number, y: number, z: number];
   selected?: boolean;
 }
 interface CubesState {

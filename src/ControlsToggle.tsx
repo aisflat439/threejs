@@ -9,16 +9,17 @@ import {
   setPanEnabled,
   setRotateEnabled,
 } from "./store/slices/controls";
+import { selectHasSelectedCube } from "./store/slices/cubes";
 
 export default function ControlsToggle() {
   const controlsRef = React.useRef<ThreeOrbitControls | null>(null);
   const dispatch = useDispatch();
   const { enabled, zoomEnabled, panEnabled, rotateEnabled } =
     useSelector(selectControls);
+  const hasSelectedCube = useSelector(selectHasSelectedCube);
 
   React.useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      console.log("e.key.toLowerCase(): ", e.key.toLowerCase());
       switch (e.key.toLowerCase()) {
         case "o":
           dispatch(setEnabled(!enabled));
@@ -47,5 +48,5 @@ export default function ControlsToggle() {
     ctrl.enablePan = panEnabled;
   }, [enabled, zoomEnabled, rotateEnabled, panEnabled]);
 
-  return <DreiOrbitControls ref={controlsRef} enabled={enabled} />;
+  return <DreiOrbitControls ref={controlsRef} enabled={!hasSelectedCube} />;
 }
