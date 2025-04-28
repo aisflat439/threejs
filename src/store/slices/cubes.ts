@@ -75,7 +75,6 @@ export const focusCube =
     dispatch(focusCubeWithoutEffects(id));
     const state = getState();
     const isEditing = selectIsEditing(state);
-    console.log("isEditing: ", isEditing);
     dispatch(setEditing(!isEditing));
   };
 

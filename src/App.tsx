@@ -18,7 +18,7 @@ import { PhysicsWorld } from "./PhysicsWorld";
 import { Mesh } from "three";
 
 function App() {
-  const [isEditorVisible, setIsEditorVisible] = useState(false);
+  const [isEditorVisible, setIsEditorVisible] = useState(true);
   const dispatch = useDispatch();
   const cubes = useSelector(selectCubes);
   const editing = useSelector(selectIsEditing);
@@ -39,9 +39,12 @@ function App() {
     <>
       <div className="app-container">
         <div className="debug-controls">
-          <button onClick={() => setIsEditorVisible((current) => !current)}>
-            {isEditorVisible ? "hide editor" : "show editor"}
-          </button>
+          <div>
+            <button onClick={() => setIsEditorVisible((current) => !current)}>
+              {isEditorVisible ? "hide editor" : "show editor"}
+            </button>
+          </div>
+          <p>Current Mode: {mode}</p>
         </div>
         <div className="editor-controls">
           editor controls
@@ -84,6 +87,26 @@ function App() {
                 <TransformControls
                   object={meshesRef.current[selectedCubeId!] || undefined}
                   mode={mode}
+                  onObjectChange={() => {
+                    const currentMesh = meshesRef.current[selectedCubeId!];
+
+                    if (currentMesh) {
+                      const { position, scale } = currentMesh;
+                      const bottomY = position.y - scale.y / 2;
+                      const topY = position.y + scale.y / 2;
+                      if (bottomY < 0) {
+                        position.y += Math.abs(bottomY);
+                      }
+                      if (bottomY > 0) {
+                        position.y -= Math.abs(bottomY);
+                      }
+                      if (topY < 0) {
+                        scale.y = Math.max(0.1, scale.y + topY);
+
+                        position.y = scale.y / 2;
+                      }
+                    }
+                  }}
                   onMouseUp={() => {
                     const currentMesh = meshesRef.current[selectedCubeId!];
 
