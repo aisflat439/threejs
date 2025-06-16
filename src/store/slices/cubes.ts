@@ -6,8 +6,8 @@ interface Cube {
   id: string;
   name: string;
   color: string;
-  position: [x: number, y: number, z: number];
-  scale?: [x: number, y: number, z: number];
+  center: [x: number, y: number, z: number];
+  scale: [x: number, y: number, z: number];
   selected?: boolean;
 }
 interface CubesState {
@@ -47,14 +47,14 @@ const cubesSlice = createSlice({
       state,
       action: PayloadAction<{
         id: string;
-        position: [number, number, number];
+        center: [number, number, number];
         scale: [number, number, number];
       }>
     ) => {
-      const { id, position, scale } = action.payload;
+      const { id, center, scale } = action.payload;
       const cube = state.cubes.find((c) => c.id === id);
       if (cube) {
-        cube.position = position;
+        cube.center = center;
         cube.scale = scale;
       }
     },
